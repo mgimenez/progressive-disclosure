@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Progressive Disclosure Test</title>
+        <link rel="stylesheet" href="css/style.css">
+    </head>
+    <body>
+       <form action="send.php"> 
+            <label for="ac">Accord</label>
+            <input type="radio" name="shippingMethod" id="ac" value="ac"/>
+            <label for="ship">Shipping</label>
+            <input type="radio" name="shippingMethod" id="ship" value="ship"/>
+            <label for="fetch">Fetch</label>
+            <input type="radio" name="shippingMethod" checked="true" id="fetch" value="fetch"/>
+            <div id="my-container"></div>
+            <input type="submit" value="Enviar"/>
+       </form>
+        <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+        <script src="js/script.js"></script>
+        <script>
+            var ac = new ProgressiveDisclosure({
+                element: document.getElementById('ac'),
+                container: document.getElementById('my-container'),
+                uri: 'send-ac.php',
+                event: 'change',
+                preCheckClosure: function(event){
+                    return true;//(event.target.value in ['envio','custom']);
+                }
+            })
+            var ship = new ProgressiveDisclosure({
+                element: document.getElementById('ship'),
+                container: document.getElementById('my-container'),
+                uri: 'send-ship.php',
+                event: 'change',
+                cache: false,
+                callback: function(){
+                }
+            })
+            var fetch = new ProgressiveDisclosure({
+                element: document.getElementById('fetch'),
+                container: document.getElementById('my-container'),
+                content: 'fetch',
+                event: 'change',
+                cache: false,
+                callback: function(){
+                }
+            })
+        </script>
+    </body>
+</html>
