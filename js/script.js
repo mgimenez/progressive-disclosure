@@ -6,71 +6,166 @@
  * var foo = new ProgressiveDisclosure({
 		element: document.getElementBy('foo'),
 		container: document.getElementBy('bar'),
-		uri: 'http://',
+		url: 'http://',
 		event: 'change'
 		callback: function(){
 
 		}
 	});
  */
-(function(win){
+(function (win, doc) {
 	'use strict';
 
-	function ProgressiveDisclosure(options){
+	var head = doc.getElementsByTagName('head')[0];
+
+	/**
+	 *
+	 */
+	function createCustomElement(tagName, data) {
+
+		var element = document.createElement(tagName);
+
+		element.insertAdjacentText('beforeend', data);
+
+		head.appendChild(element);
+	};
+
+	function loadData(element, url, callback) {
+
+		var xhr = new XMLHttpRequest();
+
+		xhr.open('GET', url, true);
+		xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+		//xhr.responseType = 'blob';
+
+		xhr.onload = function () {
+			if (this.status === 200) {
+				callback(this.response);
+			}
+		};
+
+		xhr.send();
+	}
+
+	function validateOptions(options) {
+		if (options.content !== undefined && options.url !== undefined) {
+			throw new win.Error('Disclosure: You must define "content" or "url". Not both.');
+
+		} else if (options.container !== undefined && options.container.nodeType === undefined) {
+			throw new win.Error('Disclosure: "container" must be a valid DOM element.');
+
+		} else if (options.element === undefined) {
+			throw new win.Error('Disclosure: An "element" is required.');
+
+		} else if (options.element !== undefined && options.element.nodeType === undefined) {
+			throw new win.Error('Disclosure: "element" must be a valid DOM element.');
+		}
+	}
+
+	function Disclosure(options) {
+
+		var that = this;
+
 		this.element = options.element;
 		this.container = options.container;
-		this.uri = options.uri;
-		this.event = options.event;
-		this.callback = options.callback;
+		this.url = options.url;
+		this.event = options.event || 'change';
+		// Give the total control to the user or do what we want
+		this.listener = options.listener || function () {
+			that.loadContent();
+		};
+		this.callback = options.callback || function (data) {
+			that.container.innerHTML = data;
+		};
 		this.content = options.content;
-		//this.prevCheck = options.preCheckClosure;
-		this.cache = options.cache !== undefined ? options.cache : true;
+		this.cache = (typeof options.cache === 'boolean') ? options.cache : true;
 
+		validateOptions(options);
 
-		//if(this.element.checked === true || this.element.options[this.element.options.selectedIndex].value !== '-1' ){
+		this.element.addEventListener(this.event, function (event) {
+			that.listener.call(that, event);
+		});
 
-		if(this.element.checked === true){
-
+		if (this.element.checked) {
 			this.loadContent();
 		}
-		var that = this;
-		
-		this.element.addEventListener(this.event, function() {
-			//if(that.prevCheck !== undefined && that.prevCheck(event)){
-				that.loadContent();
-			//}
-		});
-	}	
+	}
 
-	ProgressiveDisclosure.prototype.loadContent = function(){
+	Disclosure.prototype.setHTML = function (data) {
+		this.container.innerHTML = data;
+	};
+
+	/**
+	 * @todo Support urls
+	 */
+	Disclosure.prototype.setCSS = function (data) {
+		createCustomElement('style', data);
+	};
+
+	/**
+	 * @todo Support urls
+	 */
+	Disclosure.prototype.setJS = function (data) {
+		createCustomElement('script', data);
+	};
+
+	/**
+	 * @todo When the container is not defined, not redefine the content via innerHTML.
+	 */
+	Disclosure.prototype.loadContent = function (newContent) {
+		
 		var that = this;
+		 
 		this.defineContainer();
 
-		if(this.content){
+		// Case 1: If a content is defined
+		if (this.content) {
 			this.container.innerHTML = this.content;
-		}else{
-			if(this.response){
-				this.container.innerHTML = this.response;
-			}else{
-				$(this.container).load(this.uri, function(data){
-					//that.callback !== undefined?
-					if(that.callback) that.callback();
-					if(that.cache) that.response = data;
-				});
+			return;
+		}
+
+		// Case 2: If we already have a response (cached)
+		if (this.response) {
+			this.callback(this.response);
+			return;
+		}
+
+		// Case 3: The request (not cached) (undefined content)
+		loadData(this.container, this.url, function (data) {
+			//
+			that.callback(data);
+
+			// Save the response if the cache is true
+			if (that.cache) {
+				that.response = data;
 			}
-		}
-	}
+		});
+	};
 
-	ProgressiveDisclosure.prototype.defineContainer = function(){
-		if(this.container === undefined){
-			this.container = win.document.createElement('div');
-			this.container.className = 'prog-disc';
+	/**
+	 * @todo Append after the trigger
+	 */
+	Disclosure.prototype.defineContainer = function () {
+		// If there isn't a container...
+		if (this.container === undefined) {
+			// Create one
+			this.container = doc.createElement('div');
+			// this.container.className = 'prog-disc-box';
+
+			// Append container to the element
 			this.element.parentNode.appendChild(this.container);
-		}
-	}
 
-	win.ProgressiveDisclosure = ProgressiveDisclosure;
-}(this))
+			// ...the interaction will be via CSS, so I need to add a classname
+			// this.element.className = 'prog-disc-trigger';
+		}
+	};
+
+	win.Disclosure = Disclosure;
+
+}(this, this.document));
+
+
+
 //this = window
 //puedo acceder a todo el win mas rapido
 
@@ -80,7 +175,7 @@
 	var foo = new ProgressiveDisclosure({
 		element: document.getElementBy('foo'),
 		container: document.getElementBy('bar'),
-		uri: 'http://',
+		url: 'http://',
 		event: 'change'
 		callback: function(){
 

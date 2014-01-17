@@ -9,46 +9,193 @@
         <link rel="stylesheet" href="css/style.css">
     </head>
     <body>
-       <form action="send.php"> 
-            <label for="ac">Accord</label>
-            <input type="radio" name="shippingMethod" id="ac" value="ac"/>
-            <label for="ship">Shipping</label>
-            <input type="radio" name="shippingMethod" id="ship" value="ship"/>
-            <label for="fetch">Fetch</label>
-            <input type="radio" name="shippingMethod" checked="true" id="fetch" value="fetch"/>
-            <div id="my-container"></div>
-            <input type="submit" value="Enviar"/>
-       </form>
-        <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+        <form action="send.php">
+            <fieldset>
+                <ul>
+                    <li>
+                        <input type="radio" name="case1" id="foo"/>
+                        <label for="foo">Foo</label>
+                    </li>
+
+                    <li>
+                        <input type="radio" name="case1" id="bar"/>
+                        <label for="bar">Bar</label>
+                    </li>
+                </ul>
+            </fieldset>
+            
+            <fieldset>
+                <ul id="case2trigger">
+                    <li>
+                        <input type="radio" name="case2" id="foobar"/>
+                        <label for="foobar">Foobar</label>
+                    </li>
+
+                    <li>
+                        <input type="radio" name="case2" id="baz"/>
+                        <label for="baz">Baz</label>
+                    </li>
+                </ul>
+                <div id="case2container">
+                    CAMION
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <select name="case3" id="case3trigger">
+                    <option value="1">One</option>
+                    <option value="2">Two</option>
+                    <option value="other">Other</option>
+                </select>
+            </fieldset>
+
+            <fieldset>
+                <select name="case4" id="case4trigger">
+                    <option value="1">One</option>
+                    <option value="2">Two</option>
+                    <option value="3">Three</option>
+                </select>
+                <div id="case4container"></div>
+            </fieldset>
+        </form>
+
         <script src="js/script.js"></script>
         <script>
-            var ac = new ProgressiveDisclosure({
-                element: document.getElementById('ac'),
-                container: document.getElementById('my-container'),
-                uri: 'send-ac.php',
-                event: 'change',
-                preCheckClosure: function(event){
-                    return true;//(event.target.value in ['envio','custom']);
-                }
-            })
-            var ship = new ProgressiveDisclosure({
-                element: document.getElementById('ship'),
-                container: document.getElementById('my-container'),
-                uri: 'send-ship.php',
-                event: 'change',
+            /**
+             * Case 1
+             */
+            var case1a = new Disclosure({
+                element: document.getElementById('foo'),
+                url: 'server.php?type=html&text=case 1 a'
+            });
+
+            var case1b = new Disclosure({
+                element: document.getElementById('bar'),
+                url: 'server.php?type=html&text=case 1 b'
+            });
+
+            /**
+             * Case 2
+             */
+            var case2 = new Disclosure({
+                element: document.getElementById('case2trigger'),
                 cache: false,
-                callback: function(){
+                container: document.getElementById('case2container'),
+                listener: function (event) {
+
+                    var el = event.target || event.srcElement;
+
+                    if (el.type !== 'radio') {
+                        return;
+                    }
+
+                    switch (el.id) {
+                    case 'foobar':
+                        this.url = 'server.php?type=html&text=case 2 foobar';
+                        break;
+                    case 'baz':
+                        this.url = 'server.php?type=html&text=case 2 baz';
+                        break;
+                    }
+
+                    this.loadContent();
                 }
-            })
-            var fetch = new ProgressiveDisclosure({
-                element: document.getElementById('fetch'),
-                container: document.getElementById('my-container'),
-                content: 'fetch',
-                event: 'change',
+            });
+
+            /**
+             * Case 3
+             */
+            var case3 = new Disclosure({
+                element: document.getElementById('case3trigger'),
+                listener: function () {
+
+                    var selected = this.element.children[this.element.selectedIndex].value;
+
+                    if (selected !== '-1' && selected === 'other') {
+                        this.url = 'server.php?type=html&text=case 3';
+                        this.loadContent();
+                    }
+                }
+            });
+
+            /**
+             * Case 4
+             */
+            var case4 = new Disclosure({
+                element: document.getElementById('case4trigger'),
                 cache: false,
-                callback: function(){
+                listener: function () {
+
+                    var selected = this.element.children[this.element.selectedIndex].value;
+
+                    if (selected === '-1') {
+                        return;
+                    }
+
+                    switch (selected) {
+                    case '1':
+                        this.url = 'server.php?type=html&text=case 4 a';
+                        break;
+                    case '2':
+                        this.url = 'server.php?type=html&text=case 4 b';
+                        break;
+                    case '3':
+                        this.url = 'server.php?type=html&text=case 4 c';
+                        break;
+                    }
+
+                    this.loadContent();
                 }
-            })
+            });
+
+
+
+
+            // var ship = new Disclosure({
+            //     element: document.getElementById('ship'),
+            //     container: document.getElementById('my-container'),
+            //     url: 'send-ship.php',
+            //     event: 'change',
+            //     cache: false
+            // })
+            // var fetch = new Disclosure({
+            //     element: document.getElementById('fetch'),
+            //     container: document.getElementById('my-container'),
+            //     content: 'fetch',
+            //     event: 'change',
+            //     cache: false
+            // })
+            // var css = new Disclosure({
+            //     element: document.getElementById('css'),
+            //     event: 'change',
+            //     url: 'send-ship.php'
+            // })
+
+            // var select = new Disclosure({
+            //     element: document.getElementById('test'),
+            //     event: 'change',
+            //     listener: function (event) {
+
+            //         var selected = this.element.children[this.element.selectedIndex].value;
+                
+            //         if (selected !== '-1' && selected === 'other') {
+            //             this.url = 'send-ac.php';
+            //         } else if (selected !== '-1' && selected === '2') {
+            //             this.url = 'send-pepe.php';
+            //         }
+
+            //         this.loadContent();
+
+            //     },
+            //     url: 'send-ship.php'
+            // })
         </script>
     </body>
 </html>
+
+
+
+
+
+
+
