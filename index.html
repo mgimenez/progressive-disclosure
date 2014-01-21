@@ -11,10 +11,11 @@
     <body>
         <form action="send.php">
             <fieldset>
-                <ul>
+                <ul id="case1trigger">
                     <li>
                         <input type="radio" name="case1" id="foo"/>
                         <label for="foo">Foo</label>
+                        <div id="case1container"></div>
                     </li>
 
                     <li>
@@ -57,6 +58,7 @@
                 </select>
                 <div id="case4container"></div>
             </fieldset>
+            
         </form>
 
         <script src="js/script.js"></script>
@@ -65,13 +67,26 @@
              * Case 1
              */
             var case1a = new Disclosure({
-                element: document.getElementById('foo'),
-                url: 'server.php?type=html&text=case 1 a'
-            });
+                element: document.getElementById('case1trigger'),
+                container: document.getElementById('case1container'),
+                listener: function (event) {
 
-            var case1b = new Disclosure({
-                element: document.getElementById('bar'),
-                url: 'server.php?type=html&text=case 1 b'
+                    var el = event.target || event.srcElement;
+
+                    if (el.type !== 'radio') {
+                        return;
+                    }
+                    switch (el.id) {
+                    case 'foo':
+                        this.url = 'server.php?type=html&text=case 1 a';
+                        this.loadContent();
+                        break;
+                    default:
+                        this.hideContent();
+                        break;
+                    }
+
+                }
             });
 
             /**
@@ -79,7 +94,6 @@
              */
             var case2 = new Disclosure({
                 element: document.getElementById('case2trigger'),
-                cache: false,
                 container: document.getElementById('case2container'),
                 listener: function (event) {
 
@@ -114,6 +128,8 @@
                     if (selected !== '-1' && selected === 'other') {
                         this.url = 'server.php?type=html&text=case 3';
                         this.loadContent();
+                    }else{
+                        this.hideContent();
                     }
                 }
             });
@@ -123,7 +139,6 @@
              */
             var case4 = new Disclosure({
                 element: document.getElementById('case4trigger'),
-                cache: false,
                 listener: function () {
 
                     var selected = this.element.children[this.element.selectedIndex].value;
@@ -147,9 +162,6 @@
                     this.loadContent();
                 }
             });
-
-
-
 
             // var ship = new Disclosure({
             //     element: document.getElementById('ship'),

@@ -79,6 +79,7 @@
 		};
 		this.content = options.content;
 		this.cache = (typeof options.cache === 'boolean') ? options.cache : true;
+		this.response = {};
 
 		validateOptions(options);
 
@@ -86,6 +87,7 @@
 			that.listener.call(that, event);
 		});
 
+		
 		if (this.element.checked) {
 			this.loadContent();
 		}
@@ -117,6 +119,7 @@
 		var that = this;
 		 
 		this.defineContainer();
+		this.container.setAttribute("aria-hidden","false");
 
 		// Case 1: If a content is defined
 		if (this.content) {
@@ -125,8 +128,8 @@
 		}
 
 		// Case 2: If we already have a response (cached)
-		if (this.response) {
-			this.callback(this.response);
+		if (this.response[this.url]) {
+			this.callback(this.response[this.url]);
 			return;
 		}
 
@@ -137,9 +140,17 @@
 
 			// Save the response if the cache is true
 			if (that.cache) {
-				that.response = data;
+				that.response[that.url] = data;
+
+				//that.response = data;
 			}
 		});
+	};
+
+	Disclosure.prototype.hideContent = function () {
+		if(this.container){
+			this.container.setAttribute("aria-hidden","true");
+		}
 	};
 
 	/**
