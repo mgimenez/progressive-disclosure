@@ -11,29 +11,32 @@
     <body>
         <form action="send.php">
             <fieldset>
-                <ul id="case1trigger">
+                <legend>Shipping method</legend>
+                <ul disclosure>
                     <li>
-                        <input type="radio" name="case1" id="foo"/>
+                        <input type="radio" name="case1" id="foo" disclosure-url="server.php?type=foo" disclosure-container="case1container2"/>
                         <label for="foo">Foo</label>
-                        <div id="case1container"></div>
                     </li>
 
                     <li>
-                        <input type="radio" name="case1" id="bar"/>
+                        <input type="radio" name="case1" id="bar" disclosure-url="server.php?type=html&text=case 1" disclosure-container="case1container"/>
                         <label for="bar">Bar</label>
+                        <div id="case1container" aria-hidden="true"></div>
                     </li>
                 </ul>
+                <div id="case1container2" aria-hidden="true"></div>
             </fieldset>
             
             <fieldset>
-                <ul id="case2trigger">
+                <legend>Shipping Costs</legend>
+                <ul disclosure disclosure-container="case2container">
                     <li>
-                        <input type="radio" name="case2" id="foobar"/>
+                        <input type="radio" name="case2" id="foobar" disclosure-url="server.php?type=html&text=case 2 A"/>
                         <label for="foobar">Foobar</label>
                     </li>
 
                     <li>
-                        <input type="radio" name="case2" id="baz"/>
+                        <input type="radio" name="case2" id="baz" disclosure-url="server.php?type=html&text=case 2 B"/>
                         <label for="baz">Baz</label>
                     </li>
                 </ul>
@@ -43,165 +46,33 @@
             </fieldset>
 
             <fieldset>
-                <select name="case3" id="case3trigger">
+                <legend>Add Cost</legend>
+                <select name="case3" disclosure>
                     <option value="1">One</option>
                     <option value="2">Two</option>
-                    <option value="other">Other</option>
+                    <option value="other" disclosure-container="case3container">Other</option>
                 </select>
+                <div id="case3container" aria-hidden="true">
+                    Add cost
+                </div>
             </fieldset>
 
             <fieldset>
-                <select name="case4" id="case4trigger">
-                    <option value="1">One</option>
-                    <option value="2">Two</option>
-                    <option value="3">Three</option>
+                <legend>Payments</legend>
+                <select name="case4" disclosure disclosure-container="case4container">
+                    <option value="1" disclosure-url="server.php?type=html&text=Payment 1">One</option>
+                    <option value="2" disclosure-url="server.php?type=html&text=Payment 2">Two</option>
+                    <option value="3" disclosure-url="server.php?type=html&text=Payment 3">Three</option>
                 </select>
-                <div id="case4container"></div>
+                <h6>Title</h6>
+                <div id="case4container">
+                    FORM
+                </div>
             </fieldset>
-            
+
         </form>
 
         <script src="js/script.js"></script>
-        <script>
-            /**
-             * Case 1
-             */
-            var case1a = new Disclosure({
-                element: document.getElementById('case1trigger'),
-                container: document.getElementById('case1container'),
-                listener: function (event) {
-
-                    var el = event.target || event.srcElement;
-
-                    if (el.type !== 'radio') {
-                        return;
-                    }
-                    switch (el.id) {
-                    case 'foo':
-                        this.url = 'server.php?type=html&text=case 1 a';
-                        this.loadContent();
-                        break;
-                    default:
-                        this.hideContent();
-                        break;
-                    }
-
-                }
-            });
-
-            /**
-             * Case 2
-             */
-            var case2 = new Disclosure({
-                element: document.getElementById('case2trigger'),
-                container: document.getElementById('case2container'),
-                listener: function (event) {
-
-                    var el = event.target || event.srcElement;
-
-                    if (el.type !== 'radio') {
-                        return;
-                    }
-
-                    switch (el.id) {
-                    case 'foobar':
-                        this.url = 'server.php?type=html&text=case 2 foobar';
-                        break;
-                    case 'baz':
-                        this.url = 'server.php?type=html&text=case 2 baz';
-                        break;
-                    }
-
-                    this.loadContent();
-                }
-            });
-
-            /**
-             * Case 3
-             */
-            var case3 = new Disclosure({
-                element: document.getElementById('case3trigger'),
-                listener: function () {
-
-                    var selected = this.element.children[this.element.selectedIndex].value;
-
-                    if (selected !== '-1' && selected === 'other') {
-                        this.url = 'server.php?type=html&text=case 3';
-                        this.loadContent();
-                    }else{
-                        this.hideContent();
-                    }
-                }
-            });
-
-            /**
-             * Case 4
-             */
-            var case4 = new Disclosure({
-                element: document.getElementById('case4trigger'),
-                listener: function () {
-
-                    var selected = this.element.children[this.element.selectedIndex].value;
-
-                    if (selected === '-1') {
-                        return;
-                    }
-
-                    switch (selected) {
-                    case '1':
-                        this.url = 'server.php?type=html&text=case 4 a';
-                        break;
-                    case '2':
-                        this.url = 'server.php?type=html&text=case 4 b';
-                        break;
-                    case '3':
-                        this.url = 'server.php?type=html&text=case 4 c';
-                        break;
-                    }
-
-                    this.loadContent();
-                }
-            });
-
-            // var ship = new Disclosure({
-            //     element: document.getElementById('ship'),
-            //     container: document.getElementById('my-container'),
-            //     url: 'send-ship.php',
-            //     event: 'change',
-            //     cache: false
-            // })
-            // var fetch = new Disclosure({
-            //     element: document.getElementById('fetch'),
-            //     container: document.getElementById('my-container'),
-            //     content: 'fetch',
-            //     event: 'change',
-            //     cache: false
-            // })
-            // var css = new Disclosure({
-            //     element: document.getElementById('css'),
-            //     event: 'change',
-            //     url: 'send-ship.php'
-            // })
-
-            // var select = new Disclosure({
-            //     element: document.getElementById('test'),
-            //     event: 'change',
-            //     listener: function (event) {
-
-            //         var selected = this.element.children[this.element.selectedIndex].value;
-                
-            //         if (selected !== '-1' && selected === 'other') {
-            //             this.url = 'send-ac.php';
-            //         } else if (selected !== '-1' && selected === '2') {
-            //             this.url = 'send-pepe.php';
-            //         }
-
-            //         this.loadContent();
-
-            //     },
-            //     url: 'send-ship.php'
-            // })
-        </script>
     </body>
 </html>
 
