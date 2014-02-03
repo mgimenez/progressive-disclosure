@@ -4,15 +4,24 @@
     var head = doc.querySelector('head'),
         // Support for IE events
         bind = win.addEventListener ? 'addEventListener' : 'attachEvent',
-        prefix = (bind === 'attachEvent') ? 'on' : '';
+        prefix = (bind === 'attachEvent') ? 'on' : '',
+        //
+        triggerSelector = [
+            // URL and/or container (querySelectorAll merges duplicated elements)
+            '[disclosure-url]',
+            '[disclosure-container]',
+            // For example: A radio button into a wrapper with a common container
+            '[disclosure-container] [checked]',
+            // For example: An option into a select with a common container
+            '[disclosure-container] [selected]'
+        ].join(',');
 
     /**
      * Discloses information progressively, revealing only the essentials.
      * @constructor
-     * @returns {disclosure} Returns a new instance of Disclosure.
+     * @returns {disclosure} A new instance of Disclosure.
      * @todo Sometimes the element must be the trigger: <button disclosure disclosure-event="click"....>
      *       Tiene las 3 propiedades: dis, dis-url. dis-cont.
-     * @todo Add support to re-use content of a container when it's previously defined.
      * @todo Unit testing Jasmine.
      * @todo loading spinner
      * @todo Bug: JS and CSS are loading each time disclosure is shown.
@@ -56,7 +65,7 @@
         this.responses = {};
 
         /**
-         * Stores data getted from pre-defined DOM containers for reusage.
+         * Stores data getted from predefined DOM containers for reusage.
          * @type {Object}
          */
         this.contents = {};
@@ -65,15 +74,13 @@
          * All the elements with associated functionality to be watched on this.event.
          * @type {NodeList}
          */
-        this.triggers = wrapper.querySelectorAll(
-            '[disclosure-url],' +
-            '[disclosure-container],' +
-            '[disclosure-container] [checked],' +
-            '[disclosure-container] [selected]'
-        );
+        this.triggers = wrapper.querySelectorAll(triggerSelector);
 
         // Listen for "triggers" on "event" in "wrapper"
         wrapper[bind](prefix + this.event, function (event) {
+            /**
+             * 1. Defining the target
+             */
             // Provide support for IE
             var target = event.target || event.srcElement,
                 lastTrigger = that.lastTriggerShown;
@@ -87,11 +94,14 @@
             // On radio buttons: "target" is this.wrapper
             target = target.children[wrapper.selectedIndex] || target;
 
+            /**
+             * 2. Defining the trigger
+             */
             // The "el" is a valid trigger defined by the user
             if (that.isTrigger(target)) {
                 // Hide the last defined container if that trigger isn't checked
                 // Support for Radio || HTMLSelectElement
-                if (lastTrigger !== undefined && (lastTrigger.checked === false || lastTrigger.value !== wrapper.value)) {
+                if (lastTrigger && (lastTrigger.checked === false || lastTrigger.value !== wrapper.value)) {
                     that.hide();
                 }
 
@@ -102,8 +112,7 @@
 
             // Hide the last defined container if the new selected trigger
             // doesn't match with a valid trigger
-            // @todo check if it's necessary
-            if (that.lastContainerShown !== undefined) {
+            if (that.lastContainerShown) {
                 that.hide();
             }
         });
@@ -167,15 +176,15 @@
      */
     function populateContainer(container, data) {
 
-        if (data.CSS !== undefined) {
+        if (data.CSS) {
             createCustomElement('style', data.CSS);
         }
 
-        if (data.HTML !== undefined) {
+        if (data.HTML) {
             container.innerHTML = data.HTML;
         }
 
-        if (data.JS !== undefined) {
+        if (data.JS) {
             createCustomElement('script', data.JS);
         }
     }
@@ -190,11 +199,12 @@
             content;
 
         while (i) {
-            trigger = this.triggers[i -= 1];
+            i -= 1;
+            trigger = this.triggers[i];
 
             // When this trigger is checked...
             // Support Radio Buttons and Select Element
-            if (trigger.checked || (this.wrapper.value !== undefined && trigger.value === this.wrapper.value)) {
+            if (trigger.checked || (this.wrapper.value && trigger.value === this.wrapper.value)) {
                 // Get container (from trigger or wrapper), get its content and
                 // trim it. Use regexp instead trim() method to support IE8+)
                 content = this.getContainer(trigger).innerHTML.replace(/^\s+|\s+$/g, '');
@@ -241,13 +251,10 @@
             //
             cache = trigger.getAttribute('disclosure-cache');
 
-        //
-        if (url !== undefined) {
+        if (url) {
             this.loadAJAXContent(url, container, cache);
         } else {
-            if (this.contents[trigger]) {
-                container.innerHTML = this.contents[trigger];
-            }
+            this.loadDOMContent(trigger, container);
         }
 
         //
@@ -276,10 +283,20 @@
     /**
      *
      */
+    Disclosure.prototype.loadDOMContent = function (trigger, container) {
+        // CACHED: If this content was predefined, get data from cache
+        if (this.contents[trigger]) {
+            container.innerHTML = this.contents[trigger];
+        }
+    };
+
+    /**
+     *
+     */
     Disclosure.prototype.loadAJAXContent = function (url, container, cache) {
 
         // CACHED: If this URL was previously requested, get data from cache
-        if (this.responses[url] !== undefined) {
+        if (this.responses[url]) {
             populateContainer(container, this.responses[url]);
             return;
         }
@@ -317,7 +334,7 @@
 
         // If there isn't a specific container for this trigger,
         // use the container defined in this.wrapper
-        if (this.container !== undefined) {
+        if (this.container) {
             return this.container;
         }
 
