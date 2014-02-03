@@ -24,7 +24,6 @@
      *       Tiene las 3 propiedades: dis, dis-url. dis-cont.
      * @todo Unit testing Jasmine.
      * @todo loading spinner
-     * @todo Bug: JS and CSS are loading each time disclosure is shown.
      * @todo Preload method to save time on predictible loadings. Just do the request and grab
      *       response into this.responses.
      * @todo disparar eventos custom. beforeshow y aftershow
@@ -178,6 +177,8 @@
 
         if (data.CSS) {
             createCustomElement('style', data.CSS);
+            // Avoid CSS to load each time disclosure is shown
+            delete data.CSS;
         }
 
         if (data.HTML) {
@@ -186,6 +187,8 @@
 
         if (data.JS) {
             createCustomElement('script', data.JS);
+            // Avoid JS to load each time disclosure is shown
+            delete data.JS;
         }
     }
 
