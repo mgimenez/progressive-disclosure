@@ -14,6 +14,26 @@
     </head>
     <body>
         <form action="send.php">
+
+
+            <ul disclosure disclosure-container="case0container">
+                <li>
+                    <input type="radio" name="case0" id="foo0" checked/>
+                    <label for="foo0">Foo</label>
+                </li>
+
+                <li>
+                    <input type="radio" name="case0" id="bar0" disclosure-url="server.php?text=case 0 B"/>
+                    <label for="bar0">Bar</label>
+                </li>
+
+                <div id="case0container">
+                    CONTENT PRE-LOADED FROM BACK-END
+                </div>
+            </ul>
+
+
+
             <fieldset>
                 <legend>Shipping method</legend>
                 <ul disclosure>
@@ -64,12 +84,12 @@
                 <legend>Payments</legend>
                 <select name="case4" disclosure disclosure-container="case4container">
                     <option value="1" disclosure-url="server.php?text=Payment 1">One</option>
-                    <option value="2" disclosure-url="server.php?text=Payment 2">Two</option>
+                    <option value="2" selected>Two</option>
                     <option value="3" disclosure-url="server.php?text=Payment 3">Three</option>
                 </select>
                 <h6>Some content here, in the middle</h6>
                 <div id="case4container">
-                    FORM
+                    FORM printed in backend
                 </div>
             </fieldset>
 

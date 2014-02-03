@@ -56,10 +56,21 @@
         this.responses = {};
 
         /**
+         * Stores data getted from pre-defined DOM containers for reusage.
+         * @type {Object}
+         */
+        this.contents = {};
+
+        /**
          * All the elements with associated functionality to be watched on this.event.
          * @type {NodeList}
          */
-        this.triggers = wrapper.querySelectorAll('[disclosure-url],[disclosure-container]');
+        this.triggers = wrapper.querySelectorAll(
+            '[disclosure-url],' +
+            '[disclosure-container],' +
+            '[disclosure-container] [checked],' +
+            '[disclosure-container] [selected]'
+        );
 
         // Listen for "triggers" on "event" in "wrapper"
         wrapper[bind](prefix + this.event, function (event) {
@@ -98,7 +109,7 @@
         });
 
         //
-        this.checkSelected();
+        this.checkPreselectedTriggers();
     }
 
     /**
@@ -128,19 +139,10 @@
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
         xhr.onload = function () {
-
             if (this.status === 200) {
-
-                var data = JSON.parse(this.response);
-
-                // if (data.CSS === undefined || data.HTML === undefined || data.JS === undefined) {
-                //     throw new win.Error('Disclosure: The AJAX response must contain a valid JSON with at least one of these keys: "HTML", "CSS" or "JS".');
-                // }
-
-                callback(data);
-
+                callback(JSON.parse(this.response));
             } else {
-                doc.body.innerHTML = this.response;
+                doc.querySelector('body').innerHTML = this.response;
             }
         };
 
@@ -149,12 +151,13 @@
 
     /**
      *
+     * @todo Add support for urls
      */
     function createCustomElement(tagName, data) {
 
         var el = doc.createElement(tagName);
 
-        el.insertAdjacentText('beforeend', data);
+        el.innerHTML = data;
 
         head.appendChild(el);
     }
@@ -180,21 +183,31 @@
     /**
      *
      */
-    Disclosure.prototype.checkSelected = function () {
+    Disclosure.prototype.checkPreselectedTriggers = function () {
 
-        var i = this.triggers.length;
+        var i = this.triggers.length,
+            trigger,
+            content;
 
         while (i) {
-            i -= 1;
+            trigger = this.triggers[i -= 1];
 
-            if (
-                // Support Radio Buttons
-                this.triggers[i].checked ||
-                    // Support Select Element
-                    (this.wrapper.value !== undefined && this.triggers[i].value === this.wrapper.value)
-            ) {
-                //
-                this.show(this.triggers[i]);
+            // When this trigger is checked...
+            // Support Radio Buttons and Select Element
+            if (trigger.checked || (this.wrapper.value !== undefined && trigger.value === this.wrapper.value)) {
+                // Get container (from trigger or wrapper), get its content and
+                // trim it. Use regexp instead trim() method to support IE8+)
+                content = this.getContainer(trigger).innerHTML.replace(/^\s+|\s+$/g, '');
+
+                // Container has a pre-setted content
+                if (content.length) {
+                    // Save it in the map of contents using the trigger as reference
+                    this.contents[trigger] = content;
+                // Container doesn't have content
+                } else {
+                    // Get it from the url or cache
+                    this.show(trigger);
+                }
             }
         }
     };
@@ -209,8 +222,6 @@
 
         while (i) {
             i -= 1;
-
-            // Check each trigger with the element
             if (this.triggers[i] === el) {
                 return true;
             }
@@ -223,16 +234,21 @@
      *
      */
     Disclosure.prototype.show = function (trigger) {
-
         //
         var url = trigger.getAttribute('disclosure-url') || trigger.href,
             //
-            container = this.defineContainer(trigger.getAttribute('disclosure-container')),
+            container = this.getContainer(trigger),
             //
             cache = trigger.getAttribute('disclosure-cache');
 
         //
-        this.loadContent(url, container, cache);
+        if (url !== undefined) {
+            this.loadAJAXContent(url, container, cache);
+        } else {
+            if (this.contents[trigger]) {
+                container.innerHTML = this.contents[trigger];
+            }
+        }
 
         //
         container.setAttribute('aria-hidden', 'false');
@@ -260,7 +276,7 @@
     /**
      *
      */
-    Disclosure.prototype.loadContent = function (url, container, cache) {
+    Disclosure.prototype.loadAJAXContent = function (url, container, cache) {
 
         // CACHED: If this URL was previously requested, get data from cache
         if (this.responses[url] !== undefined) {
@@ -290,11 +306,13 @@
      *
      * @returns {HTMLElement}
      */
-    Disclosure.prototype.defineContainer = function (containerID) {
+    Disclosure.prototype.getContainer = function (trigger) {
+
+        var containerId = trigger.getAttribute('disclosure-container');
 
         // If there is a container defined for this trigger, get it from DOM
-        if (containerID !== null) {
-            return doc.getElementById(containerID);
+        if (containerId !== null) {
+            return doc.getElementById(containerId);
         }
 
         // If there isn't a specific container for this trigger,
