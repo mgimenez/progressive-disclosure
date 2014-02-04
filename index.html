@@ -14,26 +14,6 @@
     </head>
     <body>
         <form action="send.php">
-
-
-            <ul disclosure disclosure-container="case0container">
-                <li>
-                    <input type="radio" name="case0" id="foo0" checked/>
-                    <label for="foo0">Foo</label>
-                </li>
-
-                <li>
-                    <input type="radio" name="case0" id="bar0" disclosure-url="server.php?text=case 0 B"/>
-                    <label for="bar0">Bar</label>
-                </li>
-
-                <div id="case0container">
-                    CONTENT PRE-LOADED FROM BACK-END
-                </div>
-            </ul>
-
-
-
             <fieldset>
                 <legend>Shipping method</legend>
                 <ul disclosure>
@@ -54,12 +34,12 @@
                 <legend>Shipping Costs</legend>
                 <ul disclosure disclosure-container="case2container">
                     <li>
-                        <input type="radio" name="case2" id="foobar" disclosure-url="server.php?text=case 2 A"/>
+                        <input type="radio" name="case2" id="foobar" disclosure-url="server.php?delay=1&text=case 2 A" disclosure-preload/>
                         <label for="foobar">Foobar</label>
                     </li>
 
                     <li>
-                        <input type="radio" name="case2" id="baz" disclosure-url="server.php?text=case 2 B"/>
+                        <input type="radio" name="case2" id="baz" disclosure-url="server.php?delay=1&text=case 2 B" disclosure-preload/>
                         <label for="baz">Baz</label>
                     </li>
                 </ul>
@@ -92,7 +72,6 @@
                     FORM printed in backend
                 </div>
             </fieldset>
-
         </form>
 
         <script src="disclosure.js"></script>

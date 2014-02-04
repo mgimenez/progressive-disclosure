@@ -118,6 +118,9 @@
 
         //
         this.checkPreselectedTriggers();
+
+        //
+        this.preloadAJAXContent();
     }
 
     /**
@@ -136,8 +139,6 @@
 
     /**
      *
-     * @todo https://developer.mozilla.org/en-US/docs/AJAX/Getting_Started
-     * @todo new win.ActiveXObject('Microsoft.XMLHTTP');
      */
     function requestHttp(url, callback) {
 
@@ -191,6 +192,31 @@
             delete data.JS;
         }
     }
+
+    /**
+     *
+     */
+    Disclosure.prototype.preloadAJAXContent = function () {
+
+        var preloads = this.wrapper.querySelectorAll('[disclosure-preload]'),
+            i = preloads.length,
+            responses = this.responses;
+
+        while (i) {
+            // Use this pattern to avoid loss reference to i
+            (function (i) {
+                var url = preloads[i].getAttribute('disclosure-url') || preloads[i].href;
+
+                win[bind](prefix + 'load', function () {
+                    requestHttp(url, function (data) {
+                        // Save on this.responses, so it will be reached
+                        // when content must be loaded
+                        responses[url] = data;
+                    });
+                });
+            }(i -= 1));
+        }
+    };
 
     /**
      *
