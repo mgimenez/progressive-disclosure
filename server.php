@@ -2,6 +2,10 @@
 
 header('Content-type: application/json');
 
+if ($_REQUEST['delay']) {
+    sleep($_REQUEST['delay']);
+}
+
 $rand = rand();
 
 echo json_encode(array(
