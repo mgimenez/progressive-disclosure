@@ -91,6 +91,7 @@
 
             // On HTMLSelectElement: "target" is the selected option
             // On radio buttons: "target" is this.wrapper
+            // TODO: see selectedOption
             target = target.children[wrapper.selectedIndex] || target;
 
             /**
@@ -120,7 +121,7 @@
         this.checkPreselectedTriggers();
 
         //
-        this.preloadAJAXContent();
+        //this.preloadAJAXContent();
     }
 
     /**
@@ -142,21 +143,32 @@
      */
     function requestHttp(url, callback) {
 
-        var xhr = new win.XMLHttpRequest();
+        // var xhr = new win.XMLHttpRequest();
 
-        xhr.open('GET', url, true);
-        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        // xhr.open('GET', url, true);
+        // xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
-        xhr.onload = function () {
-            if (this.status === 200) {
-                callback(JSON.parse(this.response));
-            } else {
-                doc.querySelector('body').innerHTML = this.response;
+        // xhr.onload = function () {
+        //     if (this.status === 200) {
+        //         callback(JSON.parse(this.response));
+        //     } else {
+        //         doc.querySelector('body').innerHTML = this.response;
+        //     }
+        // };
+
+        // xhr.send();
+
+        $.ajax({
+            'url': url,
+            'dataType': 'json',
+            'success': callback,
+            'error': function (jqXHR, textStatus, errorThrown) {
+                doc.querySelector('body').innerHTML = errorThrown;
             }
-        };
-
-        xhr.send();
+        });
     }
+
+
 
     /**
      *
@@ -174,49 +186,29 @@
     /**
      *
      */
-    function populateContainer(container, data) {
+    // Disclosure.prototype.preloadAJAXContent = function () {
 
-        if (data.CSS) {
-            createCustomElement('style', data.CSS);
-            // Avoid CSS to load each time disclosure is shown
-            delete data.CSS;
-        }
+    //     var preloads = this.wrapper.querySelectorAll('[disclosure-preload]'),
+    //         i = preloads.length,
+    //         responses = this.responses;
 
-        if (data.HTML) {
-            container.innerHTML = data.HTML;
-        }
+    //     while (i) {
+    //         // Use this pattern to avoid loss reference to i
+    //         (function (i) {
+    //             var url = preloads[i].getAttribute('disclosure-url') || preloads[i].href;
 
-        if (data.JS) {
-            createCustomElement('script', data.JS);
-            // Avoid JS to load each time disclosure is shown
-            delete data.JS;
-        }
-    }
-
-    /**
-     *
-     */
-    Disclosure.prototype.preloadAJAXContent = function () {
-
-        var preloads = this.wrapper.querySelectorAll('[disclosure-preload]'),
-            i = preloads.length,
-            responses = this.responses;
-
-        while (i) {
-            // Use this pattern to avoid loss reference to i
-            (function (i) {
-                var url = preloads[i].getAttribute('disclosure-url') || preloads[i].href;
-
-                win[bind](prefix + 'load', function () {
-                    requestHttp(url, function (data) {
-                        // Save on this.responses, so it will be reached
-                        // when content must be loaded
-                        responses[url] = data;
-                    });
-                });
-            }(i -= 1));
-        }
-    };
+    //             win[bind](prefix + 'load', function () {
+    //                 if (!responses[url]) {
+    //                     requestHttp(url, function (data) {
+    //                         // Save on this.responses, so it will be reached
+    //                         // when content must be loaded
+    //                         responses[url] = data;
+    //                     });
+    //                 }
+    //             });
+    //         }(i -= 1));
+    //     }
+    // };
 
     /**
      *
@@ -225,7 +217,7 @@
 
         var i = this.triggers.length,
             trigger,
-            content;
+            container;
 
         while (i) {
             i -= 1;
@@ -234,18 +226,37 @@
             // When this trigger is checked...
             // Support Radio Buttons and Select Element
             if (trigger.checked || (this.wrapper.value && trigger.value === this.wrapper.value)) {
-                // Get container (from trigger or wrapper), get its content and
-                // trim it. Use regexp instead trim() method to support IE8+)
-                content = this.getContainer(trigger).innerHTML.replace(/^\s+|\s+$/g, '');
+
+                container = this.getContainer(trigger);
 
                 // Container has a pre-setted content
-                if (content.length) {
+                // Get container (from trigger or wrapper), get its content and
+                // trim it. Use regexp instead trim() method to support IE8+)
+                if (container.innerHTML.replace(/^\s+|\s+$/g, '').length) {
+                    console.log('vino algo del server:'+container.innerHTML);
+
+                    var wrappercontentnew = doc.createElement('div');
+                    // wrappercontentnew.setAttribute('aria-hidden', 'true');
+
+                    // wrappercontentnew.id = container.id;
+
+                    // container.id = null;
+
+                    container.parentNode.insertBefore(wrappercontentnew, container);
+
+                    wrappercontentnew.appendChild(container);
+
+                    if (this.container === container) {
+                        this.container = wrappercontentnew;
+                    }
+
+                    console.log("wrappeo todo con un nuevo container");
+
                     // Save it in the map of contents using the trigger as reference
-                    this.contents[trigger] = content;
-                // Container doesn't have content
-                } else {
-                    // Get it from the url or cache
-                    this.show(trigger);
+                    this.contents[trigger.outerHTML] = container;
+
+                    this.lastTriggerShown = trigger;
+                    this.lastContainerShown = container;
                 }
             }
         }
@@ -273,78 +284,170 @@
      *
      */
     Disclosure.prototype.show = function (trigger) {
-        //
-        var url = trigger.getAttribute('disclosure-url') || trigger.href,
-            //
-            container = this.getContainer(trigger),
-            //
-            cache = trigger.getAttribute('disclosure-cache');
 
-        if (url) {
-            this.loadAJAXContent(url, container, cache);
+        $(trigger).trigger('beforeshow.disclosure');
+
+        console.log("SHOW");
+
+        var content = this.contents[trigger.outerHTML];
+
+        if (content) {
+            console.log('muestro container que ya esta definido');
+
+            content.setAttribute('aria-hidden', 'false');
+            console.log('1111');
+            $(trigger).trigger('aftershow.disclosure');
+
+            this.lastTriggerShown = trigger;
+            this.lastContainerShown = content;
+
         } else {
-            this.loadDOMContent(trigger, container);
+            var container = this.getContainer(trigger);
+
+            var url = trigger.getAttribute('disclosure-url') || trigger.href;
+
+            if (url) {
+                console.log('tiene url');
+                console.log('creo un Content dentro del container nodrizo');
+
+                content = doc.createElement('div');
+                content.setAttribute('aria-hidden', 'false');
+                console.log('2222');
+
+                container.appendChild(content);
+
+                this.contents[trigger.outerHTML] = content;
+
+                this.loadAJAXContent(url, trigger, content);
+
+                this.lastTriggerShown = trigger;
+                this.lastContainerShown = content;
+
+            } else {
+                console.log('NO tiene url, creo un container y uso el que esta como content');
+
+                var wrappercontentnew = doc.createElement('div');
+                // wrappercontentnew.setAttribute('aria-hidden', 'true');
+
+                // wrappercontentnew.id = container.id;
+
+                // container.id = null;
+
+                container.parentNode.insertBefore(wrappercontentnew, container);
+
+                wrappercontentnew.appendChild(container);
+
+                if (this.container === container) {
+                    this.container = wrappercontentnew;
+                }
+
+                console.log("wrappeo todo con un nuevo container");
+
+                // Save it in the map of contents using the trigger as reference
+                this.contents[trigger.outerHTML] = container;
+
+                this.lastTriggerShown = trigger;
+                this.lastContainerShown = container;
+
+                container.setAttribute('aria-hidden', 'false');
+
+                console.log('3333');
+                $(trigger).trigger('aftershow.disclosure');
+            }
         }
 
+        // if (url) {
+        //     this.loadAJAXContent(url, container);
+        // } else {
+        //     this.loadDOMContent(trigger, container);
+        // }
+
+        // if (this.contents[trigger.id]) {
+        //     //container.innerHTML = this.contents[trigger.id];
+        //     container).append(this.contents[trigger.id]);
+        //     console.log('pego contenido desde el this.contents');
+        // } else {
+
+
+
+        //}
+
         //
-        container.setAttribute('aria-hidden', 'false');
+        // container.setAttribute('aria-hidden', 'false');
 
-        /**
-         *
-         * @type {HTMLElement}
-         */
-        this.lastTriggerShown = trigger;
 
-        /**
-         *
-         * @type {HTMLElement}
-         */
-        this.lastContainerShown = container;
+
     };
 
     /**
      *
      */
     Disclosure.prototype.hide = function () {
-        this.lastContainerShown.setAttribute('aria-hidden', 'true');
-    };
-
-    /**
-     *
-     */
-    Disclosure.prototype.loadDOMContent = function (trigger, container) {
-        // CACHED: If this content was predefined, get data from cache
-        if (this.contents[trigger]) {
-            container.innerHTML = this.contents[trigger];
+        if (this.lastContainerShown) {
+            console.log('...hideee...');
+            this.lastContainerShown.setAttribute('aria-hidden', 'true');
         }
+        // this.lastContainerShown.setAttribute('aria-hidden', 'true');
+        // this.contents[this.lastTriggerShown] = $(this.lastContainerShown).detach();
+        //console.log('guardo el contenido del trigger que se acaba de ocultar');
     };
 
     /**
      *
      */
-    Disclosure.prototype.loadAJAXContent = function (url, container, cache) {
+    // Disclosure.prototype.loadDOMContent = function (trigger, container) {
+    //     // CACHED: If this content was predefined, get data from cache
+    //     if (this.contents[trigger]) {
+    //         container.innerHTML = this.contents[trigger];
+    //         // TODO: trigger event
+    //     }
+    // };
+
+    /**
+     *
+     */
+    Disclosure.prototype.loadAJAXContent = function (url, trigger, content) {
+
+        //
+        //var responses = this.responses;
 
         // CACHED: If this URL was previously requested, get data from cache
-        if (this.responses[url]) {
-            populateContainer(container, this.responses[url]);
-            return;
-        }
+        // if (responses[url]) {
+        //     container.innerHTML = responses[url];
+        //     initialize(container);
+        //     // TODO: trigger event here
+        //     return;
+        // }
 
-        /**
-         *
-         */
-        var responses = this.responses;
+        var that = this;
+
 
         // AJAX: Data doesn't exist in responses, so get from URL
         requestHttp(url, function (data) {
 
-            populateContainer(container, data);
-
-            initialize(container);
-
-            if (cache === null || cache === 'true') {
-                responses[url] = data;
+            if (data.CSS) {
+                createCustomElement('style', data.CSS);
             }
+
+            if (data.HTML) {
+                content.innerHTML = data.HTML;
+
+                // content.setAttribute('aria-hidden', 'false');
+                $(trigger).trigger('aftershow.disclosure');
+
+                // TODO: trigger event here
+                // if (cache === null || cache === 'true') {
+                //     responses[url] = data.HTML;
+                // }
+                //contents[trigger] = container.innerHTML;
+                console.log('pego el contenido de ajax en el Content');
+            }
+
+            if (data.JS) {
+                createCustomElement('script', data.JS);
+            }
+
+            initialize(content);
         });
     };
 

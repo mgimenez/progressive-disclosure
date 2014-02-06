@@ -14,7 +14,7 @@
     </head>
     <body>
         <form action="send.php">
-            <fieldset>
+            <fieldset data-js="paradesabilitar">
                 <legend>Shipping method</legend>
                 <ul disclosure>
                     <li>
@@ -25,26 +25,26 @@
                     <li>
                         <input type="radio" name="case1" id="bar" disclosure-url="server.php?text=case 1 B" disclosure-container="case1container"/>
                         <label for="bar">Bar</label>
-                        <div id="case1container" aria-hidden="true"></div>
+                        <div id="case1container"></div>
                     </li>
                 </ul>
             </fieldset>
 
-            <fieldset>
+            <fieldset data-js="kakakaka">
                 <legend>Shipping Costs</legend>
                 <ul disclosure disclosure-container="case2container">
                     <li>
-                        <input type="radio" name="case2" id="foobar" disclosure-url="server.php?delay=1&text=case 2 A" disclosure-preload/>
+                        <input type="radio" name="case2" id="foobar" disclosure-url="server.php?text=case 2 A"/>
                         <label for="foobar">Foobar</label>
                     </li>
 
                     <li>
-                        <input type="radio" name="case2" id="baz" disclosure-url="server.php?delay=1&text=case 2 B" disclosure-preload/>
+                        <input type="radio" name="case2" id="baz" disclosure-url="server.php?text=case 2 B"/>
                         <label for="baz">Baz</label>
                     </li>
                 </ul>
                 <div id="case2container">
-                    CAMION
+                    <div data-js="camionnn">CAMION</div>
                 </div>
             </fieldset>
 
@@ -53,28 +53,118 @@
                 <select name="case3" disclosure>
                     <option value="1">One</option>
                     <option value="2">Two</option>
-                    <option value="other" disclosure-container="case3container">Other</option>
+                    <option value="other" id="rerere" disclosure-container="case3container">Other</option>
                 </select>
                 <div id="case3container" aria-hidden="true">
-                    Add cost
+                    <span id="addcostsata">Add cost</span>
                 </div>
             </fieldset>
 
             <fieldset>
                 <legend>Payments</legend>
                 <select name="case4" disclosure disclosure-container="case4container">
-                    <option value="1" disclosure-url="server.php?text=Payment 1">One</option>
-                    <option value="2" selected>Two</option>
-                    <option value="3" disclosure-url="server.php?text=Payment 3">Three</option>
+                    <option value="1" id="temp4a" disclosure-url="server.php?text=Payment 1">One</option>
+                    <option value="2" id="temp4b" selected>Two</option>
+                    <option value="3" id="temp4c" disclosure-url="server.php?text=Payment 3">Three</option>
                 </select>
                 <h6>Some content here, in the middle</h6>
                 <div id="case4container">
-                    FORM printed in backend
+                    <span id="dsadsa">FORM printed in backend</span>
                 </div>
             </fieldset>
         </form>
 
+        <div>
+            <h4>CEP</h4>
+            <div data-js="cep">
+                <div data-js="mierda">
+                    <button data-js="cep-submit" data-action="server.php?cep=123">Send</button>
+                </div>
+            </div>
+            <!-- <div disclosure disclosure-event="click">
+
+                <div id="case5container1">
+                    <form action="nomatter.php">
+                        <input type="submit" disclosure-container="case5container1" disclosure-url="server.php?cep=123" value="Send"/>
+                    </form>
+                </div>
+            </div> -->
+        </div>
+
+        <script src="http://static.mlstatic.com/org-img/ch/vendor/jquery/jquery-1.10.2.min.js"></script>
         <script src="disclosure.js"></script>
+        <script>document.getElementById('dsadsa').addEventListener('click', function () {alert("from server")})</script>
+        <script>document.getElementById('addcostsata').addEventListener('click', function () {alert("valid add cost")})</script>
+
+        <script>
+            // DESABILITAR SUBMIT mientras carga disclosures
+            $('[data-js="paradesabilitar"]')
+                .on('beforeshow.disclosure', function () {
+                    this.style.backgroundColor = 'red';
+                })
+                .on('aftershow.disclosure', function () {
+                    this.style.backgroundColor = 'green';
+                });
+        </script>
+
+        <script>
+            // VOLAR CAMION
+            $('[data-js="kakakaka"]').one('aftershow.disclosure', function () {
+                var camion = document.querySelector('[data-js="camionnn"]');
+                camion.parentNode.removeChild(camion);
+            });
+        </script>
+
+        <script>
+(function (cho, doc) {
+    'use strict';
+
+    var cep = doc.querySelector('[data-js="cep"]');
+
+    // cho.mierda = document.querySelector('[data-js="mierda"]'),
+    window.mierda = doc.querySelector('[data-js="mierda"]'),
+
+    // cho.bind(doc.querySelector('[data-js="cep-submit"]'), 'click', function (event) {
+    doc.querySelector('[data-js="cep-submit"]').addEventListener('click', function (event) {
+        event.preventDefault();
+
+        $.ajax({
+            'url': this.getAttribute('data-action'),
+            'dataType': 'json',
+            'success': function (data) {
+                // Hide the Zip Code input
+                mierda.setAttribute('aria-hidden', 'true');
+                // Insert the response (the entire form)
+                cep.insertAdjacentHTML('beforeend', data.HTML);
+                // Insert scripts
+                var script = document.createElement('script');
+                script.innerHTML = data.JS;
+                document.querySelector('head').appendChild(script);
+            }
+        })
+    });
+
+}(this.cho, this.document));
+        </script>
     </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
