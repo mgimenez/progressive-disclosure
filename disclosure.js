@@ -133,12 +133,13 @@
 
         // Listen for "triggers" on "event" in "wrapper"
         this.wrapper[bind](prefix + this.event, function (event) {
+            var el = event.target || event.srcElement;
             // Prevent to trigger anchors and submit inputs/buttons
             if (el.nodeName === 'A' || el.type === 'submit') {
                 event.preventDefault();
             }
 
-            that.select(event.target || event.srcElement);
+            that.select(el);
         });
 
         //

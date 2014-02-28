@@ -20,8 +20,8 @@
 <body>
     <h1>Disclosure</h1>
 
-    <fieldset disclosure disclosure-container="example0container">
-        <legend>'disclosure-container' defined in wrapper and trigger</legend>
+    <div disclosure disclosure-container="example0container">
+        <h2>'disclosure-container' defined in wrapper and trigger</h2>
 
         <input type="radio" name="example0" id="example0a" disclosure-url="setted_only_for_generate_a_trigger"/>
         <input type="radio" name="example0" id="example0b" disclosure-container="example0container2"/>
@@ -29,13 +29,13 @@
         <div data-js="example0container">'data-js': same as 'id' to test 'data-js' over 'id'.</div>
         <div id="example0container">'id': same as 'data-js' to test 'data-js' over 'id'.</div>
         <div id="example0container2">To test 'disclosure-container' defined in a trigger.</div>
-    </fieldset>
+    </div>
 
-    <fieldset disclosure disclosure-event="click">
+    <div disclosure disclosure-event="click">
         <legend>'disclosure-event' defined in wrapper</legend>
         <input type="radio" name="example1" id="example1a"/>
         <input type="radio" name="example1" id="example1b"/>
-    </fieldset>
+    </div>
 
 
 
