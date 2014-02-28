@@ -1,32 +1,74 @@
 (function (win, doc) {
     'use strict';
 
-    var head = doc.querySelector('head'),
-        // Support for IE events
+    /**
+     * Helpers
+     */
+    var head = doc.head || doc.querySelector('head'),
+        /**
+         * @example
+         * element[bind](prefix + 'click', function () {...});
+         */
         bind = win.addEventListener ? 'addEventListener' : 'attachEvent',
         prefix = (bind === 'attachEvent') ? 'on' : '',
-        //
-        triggerSelector = [
-            // URL and/or container (querySelectorAll merges duplicated elements)
-            '[disclosure-url]',
-            '[disclosure-container]',
-            // For example: A radio button into a wrapper with a common container
-            '[disclosure-container] [checked]',
-            // For example: An option into a select with a common container
-            '[disclosure-container] [selected]'
-        ].join(',');
+
+        /**
+         * Stores data getted from AJAX requests for reusage.
+         * @type {Object}
+         * @private
+         */
+        responses = {};
+
+    /**
+     * Support for IE8 for trim() using regex
+     * @private
+     * @param {String} str
+     * @returns {Boolean}
+     */
+    function isEmpty(str) {
+        return (win.String.prototype.trim ? str.trim() : str.replace(/^\s+|\s+$/g, '')).length === 0;
+    }
+
+    /**
+     * Gets an element from "data-js" or "id" attribute
+     * @private
+     * @param {String} id The "data-js" or "id" attribute of the element
+     * @returns {Element}
+     */
+    function getElement(id) {
+        return doc.querySelector('[data-js="' + id + '"]') || doc.getElementById(id);
+    }
+
+    /**
+     * Sets "disclosure-hidden" and "aria-hidden" to false.
+     * @private
+     * @param {Element} el
+     */
+    function showElement(el) {
+        el.setAttribute('disclosure-hidden', 'false');
+        el.setAttribute('aria-hidden', 'false');
+    }
+
+    /**
+     * Sets "disclosure-hidden" and "aria-hidden" to true.
+     * @private
+     * @param {Element} el
+     */
+    function hideElement(el) {
+        el.setAttribute('disclosure-hidden', 'true');
+        el.setAttribute('aria-hidden', 'true');
+    }
 
     /**
      * Discloses information progressively, revealing only the essentials.
      * @constructor
+     * @param {Element} wrapper A container with the "disclosure" attribute.
      * @returns {disclosure} A new instance of Disclosure.
-     * @todo Sometimes the element must be the trigger: <button disclosure disclosure-event="click"....>
-     *       Tiene las 3 propiedades: dis, dis-url. dis-cont.
+     *
+     * @todo Sometimes the element must be the trigger: <button disclosure disclosure-event="click"....> It has the 3 properties: disclosure, disclosure-url and disclosure-container.
      * @todo Unit testing Jasmine.
      * @todo loading spinner
-     * @todo Preload method to save time on predictible loadings. Just do the request and grab
-     *       response into this.responses.
-     * @todo disparar eventos custom. beforeshow y aftershow
+     * @todo Preload method to save time on predictible loadings. Just do the request and grab response into this.responses.
      * @todo usar localstorage para ni siquiera hacer el primer request
      */
     function Disclosure(wrapper) {
@@ -55,13 +97,7 @@
          * container if there is no container defined in each trigger.
          * @type {HTMLElement}
          */
-        this.container = doc.getElementById(wrapper.getAttribute('disclosure-container'));
-
-        /**
-         * Stores data getted from AJAX requests for reusage.
-         * @type {Object}
-         */
-        this.responses = {};
+        this.container = getElement(wrapper.getAttribute('disclosure-container'));
 
         /**
          * Stores data getted from predefined DOM containers for reusage.
@@ -73,48 +109,36 @@
          * All the elements with associated functionality to be watched on this.event.
          * @type {NodeList}
          */
-        this.triggers = wrapper.querySelectorAll(triggerSelector);
+        this.triggers = wrapper.querySelectorAll(
+            // URL and/or container (querySelectorAll merges duplicated elements)
+            '[disclosure-url],' +
+            '[disclosure-container],' +
+            // For example: A radio button into a wrapper with a common container
+            '[disclosure-container] [checked],' +
+            // For example: An option into a select with a common container
+            '[disclosure-container] [selected]'
+        );
+
+        /**
+         * Reference to the last trigger. Use to be manipulated after switch to a new trigger.
+         * @type {Element}
+         */
+        this.lastTriggerShown;
+
+        /**
+         * Reference to the last container. Use to be manipulated after switch to a new container.
+         * @type {Element}
+         */
+        this.lastContainerShown;
 
         // Listen for "triggers" on "event" in "wrapper"
-        wrapper[bind](prefix + this.event, function (event) {
-            /**
-             * 1. Defining the target
-             */
-            // Provide support for IE
-            var target = event.target || event.srcElement,
-                lastTrigger = that.lastTriggerShown;
-
-            // Prevent to trigger anchors and submits
-            if (target.nodeName === 'A' || target.type === 'submit') {
+        this.wrapper[bind](prefix + this.event, function (event) {
+            // Prevent to trigger anchors and submit inputs/buttons
+            if (el.nodeName === 'A' || el.type === 'submit') {
                 event.preventDefault();
             }
 
-            // On HTMLSelectElement: "target" is the selected option
-            // On radio buttons: "target" is this.wrapper
-            // TODO: see selectedOption
-            target = target.children[wrapper.selectedIndex] || target;
-
-            /**
-             * 2. Defining the trigger
-             */
-            // The "el" is a valid trigger defined by the user
-            if (that.isTrigger(target)) {
-                // Hide the last defined container if that trigger isn't checked
-                // Support for Radio || HTMLSelectElement
-                if (lastTrigger && (lastTrigger.checked === false || lastTrigger.value !== wrapper.value)) {
-                    that.hide();
-                }
-
-                that.show(target);
-
-                return;
-            }
-
-            // Hide the last defined container if the new selected trigger
-            // doesn't match with a valid trigger
-            if (that.lastContainerShown) {
-                that.hide();
-            }
+            that.select(event.target || event.srcElement);
         });
 
         //
@@ -128,55 +152,50 @@
      *
      */
     function initialize(container) {
-
+        // `container` is to search for new disclosures within a new AJAX response
         var wrappers = (container || doc).querySelectorAll('[disclosure]'),
-            i = wrappers.length;
+            i = 0,
+            j = wrappers.length;
 
-        while (i) {
-            i -= 1;
-            new Disclosure(wrappers[i]);
+        for (i; i < j; i += 1) {
+            win._disclosures.push(new Disclosure(wrappers[i]));
         }
     }
 
     /**
      *
+     * @todo Use vanilla js
+     * @todo
+     * var xhr = new win.XMLHttpRequest();
+     * xhr.open('GET', url, true);
+     * xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+     * xhr.onload = function () {
+     *     if (this.status === 200) {
+     *         callback(JSON.parse(this.response));
+     *     } else {
+     *         doc.querySelector('body').innerHTML = this.response;
+     *     }
+     * };
+     * xhr.send();
      */
-    function requestHttp(url, callback) {
-
-        // var xhr = new win.XMLHttpRequest();
-
-        // xhr.open('GET', url, true);
-        // xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-
-        // xhr.onload = function () {
-        //     if (this.status === 200) {
-        //         callback(JSON.parse(this.response));
-        //     } else {
-        //         doc.querySelector('body').innerHTML = this.response;
-        //     }
-        // };
-
-        // xhr.send();
-
+    function requestHttp(url, success) {//console.log('requestHttp');
         $.ajax({
             'url': url,
             'dataType': 'json',
-            'success': callback,
+            'success': success,
             'error': function (jqXHR, textStatus, errorThrown) {
                 doc.querySelector('body').innerHTML = errorThrown;
             }
         });
     }
 
-
-
     /**
      *
      * @todo Add support for urls
      */
-    function createCustomElement(tagName, data) {
+    function createCustomElement(type, data) {
 
-        var el = doc.createElement(tagName);
+        var el = doc.createElement(type);
 
         el.innerHTML = data;
 
@@ -210,6 +229,28 @@
     //     }
     // };
 
+    Disclosure.prototype.select = function (el) {
+
+        var lastShown = this.lastTriggerShown;
+
+        // HTMLSelectElement's selected option or a radio button
+        el = el.options ? el.options[this.wrapper.selectedIndex] : el;
+
+        // The "el" is a valid trigger defined by the user
+        if (this.isTrigger(el)) {
+            // Hide the last defined container if that trigger isn't checked
+            // Support for Radio || HTMLSelectElement
+            if (lastShown && (lastShown.checked === false || lastShown.value !== this.wrapper.value)) {
+                this.hide();
+            }
+            this.show(el);
+        // Hide the last defined container if the new selected trigger
+        // doesn't match with a valid trigger
+        } else {
+            this.hide();
+        }
+    };
+
     /**
      *
      */
@@ -230,10 +271,8 @@
                 container = this.getContainer(trigger);
 
                 // Container has a pre-setted content
-                // Get container (from trigger or wrapper), get its content and
-                // trim it. Use regexp instead trim() method to support IE8+)
-                if (container.innerHTML.replace(/^\s+|\s+$/g, '').length) {
-                    console.log('vino algo del server:'+container.innerHTML);
+                if (!isEmpty(container.innerHTML)) {
+                    //console.log('vino algo del server:'+container.innerHTML);
 
                     var wrappercontentnew = doc.createElement('div');
                     // wrappercontentnew.setAttribute('aria-hidden', 'true');
@@ -250,13 +289,15 @@
                         this.container = wrappercontentnew;
                     }
 
-                    console.log("wrappeo todo con un nuevo container");
+                    //console.log("wrappeo todo con un nuevo container");
 
                     // Save it in the map of contents using the trigger as reference
                     this.contents[trigger.outerHTML] = container;
 
                     this.lastTriggerShown = trigger;
                     this.lastContainerShown = container;
+                } else {
+                    this.show(trigger);
                 }
             }
         }
@@ -282,20 +323,20 @@
 
     /**
      *
+     * @todo 'beforeshow' is not triggered when it's preselected
      */
-    Disclosure.prototype.show = function (trigger) {
+    Disclosure.prototype.show = function (trigger) {//console.log('show');
 
         $(trigger).trigger('beforeshow.disclosure');
 
-        console.log("SHOW");
+        //console.log("SHOW");
 
         var content = this.contents[trigger.outerHTML];
 
         if (content) {
-            console.log('muestro container que ya esta definido');
-
-            content.setAttribute('aria-hidden', 'false');
-            console.log('1111');
+            //console.log('muestro container que ya esta definido');
+            showElement(content);
+            //console.log('1111');
             $(trigger).trigger('aftershow.disclosure');
 
             this.lastTriggerShown = trigger;
@@ -307,12 +348,12 @@
             var url = trigger.getAttribute('disclosure-url') || trigger.href;
 
             if (url) {
-                console.log('tiene url');
-                console.log('creo un Content dentro del container nodrizo');
+                //console.log('tiene url');
+                //console.log('creo un Content dentro del container nodrizo');
 
                 content = doc.createElement('div');
-                content.setAttribute('aria-hidden', 'false');
-                console.log('2222');
+                showElement(content);
+                //console.log('2222');
 
                 container.appendChild(content);
 
@@ -324,7 +365,7 @@
                 this.lastContainerShown = content;
 
             } else {
-                console.log('NO tiene url, creo un container y uso el que esta como content');
+                //console.log('NO tiene url, creo un container y uso el que esta como content');
 
                 var wrappercontentnew = doc.createElement('div');
                 // wrappercontentnew.setAttribute('aria-hidden', 'true');
@@ -341,7 +382,7 @@
                     this.container = wrappercontentnew;
                 }
 
-                console.log("wrappeo todo con un nuevo container");
+                //console.log("wrappeo todo con un nuevo container");
 
                 // Save it in the map of contents using the trigger as reference
                 this.contents[trigger.outerHTML] = container;
@@ -349,34 +390,12 @@
                 this.lastTriggerShown = trigger;
                 this.lastContainerShown = container;
 
-                container.setAttribute('aria-hidden', 'false');
+                showElement(container);
 
-                console.log('3333');
+                //console.log('3333');
                 $(trigger).trigger('aftershow.disclosure');
             }
         }
-
-        // if (url) {
-        //     this.loadAJAXContent(url, container);
-        // } else {
-        //     this.loadDOMContent(trigger, container);
-        // }
-
-        // if (this.contents[trigger.id]) {
-        //     //container.innerHTML = this.contents[trigger.id];
-        //     container).append(this.contents[trigger.id]);
-        //     console.log('pego contenido desde el this.contents');
-        // } else {
-
-
-
-        //}
-
-        //
-        // container.setAttribute('aria-hidden', 'false');
-
-
-
     };
 
     /**
@@ -384,12 +403,14 @@
      */
     Disclosure.prototype.hide = function () {
         if (this.lastContainerShown) {
-            console.log('...hideee...');
-            this.lastContainerShown.setAttribute('aria-hidden', 'true');
+            $(this.lastTriggerShown).trigger('beforehide.disclosure');
+            //console.log('...hideee...');
+            hideElement(this.lastContainerShown);
+            $(this.lastTriggerShown).trigger('afterhide.disclosure');
         }
         // this.lastContainerShown.setAttribute('aria-hidden', 'true');
         // this.contents[this.lastTriggerShown] = $(this.lastContainerShown).detach();
-        //console.log('guardo el contenido del trigger que se acaba de ocultar');
+        ////console.log('guardo el contenido del trigger que se acaba de ocultar');
     };
 
     /**
@@ -425,11 +446,11 @@
         // AJAX: Data doesn't exist in responses, so get from URL
         requestHttp(url, function (data) {
 
-            if (data.CSS) {
+            if (data.CSS && !isEmpty(data.CSS)) {
                 createCustomElement('style', data.CSS);
             }
 
-            if (data.HTML) {
+            if (data.HTML && !isEmpty(data.HTML)) {
                 content.innerHTML = data.HTML;
 
                 // content.setAttribute('aria-hidden', 'false');
@@ -440,10 +461,10 @@
                 //     responses[url] = data.HTML;
                 // }
                 //contents[trigger] = container.innerHTML;
-                console.log('pego el contenido de ajax en el Content');
+                //console.log('pego el contenido de ajax en el Content');
             }
 
-            if (data.JS) {
+            if (data.JS && !isEmpty(data.JS)) {
                 createCustomElement('script', data.JS);
             }
 
@@ -461,7 +482,7 @@
 
         // If there is a container defined for this trigger, get it from DOM
         if (containerId !== null) {
-            return doc.getElementById(containerId);
+            return getElement(containerId);
         }
 
         // If there isn't a specific container for this trigger,
@@ -471,13 +492,20 @@
         }
 
         // Check that at least exist a container defined in this.wrapper
-        throw new win.Error('Disclosure: No "disclosure-container" was defined on the trigger nor wrapper.');
+        throw new win.Error('Disclosure: No "disclosure-container" was defined on the trigger nor wrapper, or it\'s not a valid Element.');
     };
 
-    // Export
+    /**
+     * Expose
+     */
+    // Instances
+    win._disclosures = win._disclosures || [];
+    // Constructor
     win.Disclosure = Disclosure;
 
-    // Init
+    /**
+     * Init
+     */
     initialize();
 
-}(this, this.document));
+}(window, window.document));
