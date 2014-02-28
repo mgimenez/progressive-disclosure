@@ -1,152 +1,227 @@
 <!doctype html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Disclosure</title>
-        <style>
-            [aria-hidden='true'] {
-                display: none;
-            }
-        </style>
-    </head>
-    <body>
-        <form action="send.php">
-            <fieldset data-js="paradesabilitar">
-                <legend>Shipping method</legend>
-                <ul disclosure>
-                    <li>
-                        <input type="radio" name="case1" id="foo"/>
-                        <label for="foo">Foo</label>
-                    </li>
+<head>
+    <meta charset="utf-8"/>
+    <title>Disclosure</title>
 
-                    <li>
-                        <input type="radio" name="case1" id="bar" disclosure-url="server.php?text=case 1 B" disclosure-container="case1container"/>
-                        <label for="bar">Bar</label>
-                        <div id="case1container"></div>
-                    </li>
-                </ul>
-            </fieldset>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <meta http-equiv="cleartype" content="on"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
 
-            <fieldset data-js="kakakaka">
-                <legend>Shipping Costs</legend>
-                <ul disclosure disclosure-container="case2container">
-                    <li>
-                        <input type="radio" name="case2" id="foobar" disclosure-url="server.php?text=case 2 A"/>
-                        <label for="foobar">Foobar</label>
-                    </li>
+    <link rel="shortcut icon" type="image/png" href="libs/jasmine-2.0.0/jasmine_favicon.png"/>
+    <link rel="stylesheet" href="libs/jasmine-2.0.0/jasmine.css"/>
 
-                    <li>
-                        <input type="radio" name="case2" id="baz" disclosure-url="server.php?text=case 2 B"/>
-                        <label for="baz">Baz</label>
-                    </li>
-                </ul>
-                <div id="case2container">
-                    <div data-js="camionnn">CAMION</div>
-                </div>
-            </fieldset>
+    <style>
+        [disclosure-hidden='true'] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Disclosure</h1>
 
-            <fieldset>
-                <legend>Add Cost</legend>
-                <select name="case3" disclosure>
-                    <option value="1">One</option>
-                    <option value="2">Two</option>
-                    <option value="other" id="rerere" disclosure-container="case3container">Other</option>
-                </select>
-                <div id="case3container" aria-hidden="true">
-                    <span id="addcostsata">Add cost</span>
-                </div>
-            </fieldset>
+    <fieldset disclosure disclosure-container="example0container">
+        <legend>'disclosure-container' defined in wrapper and trigger</legend>
 
-            <fieldset>
-                <legend>Payments</legend>
-                <select name="case4" disclosure disclosure-container="case4container">
-                    <option value="1" id="temp4a" disclosure-url="server.php?text=Payment 1">One</option>
-                    <option value="2" id="temp4b" selected>Two</option>
-                    <option value="3" id="temp4c" disclosure-url="server.php?text=Payment 3">Three</option>
-                </select>
-                <h6>Some content here, in the middle</h6>
-                <div id="case4container">
-                    <span id="dsadsa">FORM printed in backend</span>
-                </div>
-            </fieldset>
-        </form>
+        <input type="radio" name="example0" id="example0a" disclosure-url="setted_only_for_generate_a_trigger"/>
+        <input type="radio" name="example0" id="example0b" disclosure-container="example0container2"/>
 
-        <div>
-            <h4>CEP</h4>
-            <div data-js="cep">
-                <div data-js="mierda">
-                    <button data-js="cep-submit" data-action="server.php?cep=123">Send</button>
-                </div>
-            </div>
-            <!-- <div disclosure disclosure-event="click">
+        <div data-js="example0container">'data-js': same as 'id' to test 'data-js' over 'id'.</div>
+        <div id="example0container">'id': same as 'data-js' to test 'data-js' over 'id'.</div>
+        <div id="example0container2">To test 'disclosure-container' defined in a trigger.</div>
+    </fieldset>
 
-                <div id="case5container1">
-                    <form action="nomatter.php">
-                        <input type="submit" disclosure-container="case5container1" disclosure-url="server.php?cep=123" value="Send"/>
-                    </form>
-                </div>
-            </div> -->
+    <fieldset disclosure disclosure-event="click">
+        <legend>'disclosure-event' defined in wrapper</legend>
+        <input type="radio" name="example1" id="example1a"/>
+        <input type="radio" name="example1" id="example1b"/>
+    </fieldset>
+
+
+
+    <fieldset data-js="paradesabilitar">
+        <legend>Shipping method</legend>
+        <ul disclosure>
+            <li>
+                <input type="radio" name="case1" id="foo"/>
+                <label for="foo">Foo</label>
+            </li>
+
+            <li>
+                <input type="radio" name="case1" id="bar" disclosure-url="server.php?text=case 1 B" disclosure-container="case1container"/>
+                <label for="bar">Bar</label>
+                <div id="case1container"></div>
+            </li>
+        </ul>
+    </fieldset>
+
+    <fieldset data-js="kakakaka">
+        <legend>Shipping Costs</legend>
+        <ul disclosure disclosure-container="case2container">
+            <li>
+                <input type="radio" name="case2" id="foobar" disclosure-url="server.php?text=case 2 A"/>
+                <label for="foobar">Foobar</label>
+            </li>
+
+            <li>
+                <input type="radio" name="case2" id="baz" disclosure-url="server.php?text=case 2 B"/>
+                <label for="baz">Baz</label>
+            </li>
+        </ul>
+        <div id="case2container">
+            <div data-js="camionnn">CAMION</div>
         </div>
+    </fieldset>
 
-        <script src="http://static.mlstatic.com/org-img/ch/vendor/jquery/jquery-1.10.2.min.js"></script>
-        <script src="disclosure.js"></script>
-        <script>document.getElementById('dsadsa').addEventListener('click', function () {alert("from server")})</script>
-        <script>document.getElementById('addcostsata').addEventListener('click', function () {alert("valid add cost")})</script>
+    <fieldset>
+        <legend>Add Cost</legend>
+        <select name="case3" disclosure>
+            <option value="1">One</option>
+            <option value="2">Two</option>
+            <option value="other" id="rerere" disclosure-container="case3container">Other</option>
+        </select>
+        <div id="case3container" disclosure-hidden="true">
+            <span id="addcostsata">Add cost</span>
+        </div>
+    </fieldset>
 
-        <script>
-            // DESABILITAR SUBMIT mientras carga disclosures
-            $('[data-js="paradesabilitar"]')
-                .on('beforeshow.disclosure', function () {
-                    this.style.backgroundColor = 'red';
-                })
-                .on('aftershow.disclosure', function () {
-                    this.style.backgroundColor = 'green';
-                });
-        </script>
+    <fieldset>
+        <legend>Payments 1 (DNI variable)</legend>
+        <select data-js="payment-method" name="case4" disclosure disclosure-container="case4container">
+            <option value="1" id="temp4aa" disclosure-url="server.php?text=TC preloaded1" class="pm-preloaded-tc">TC Precargada1</option>
+            <option value="2" id="temp4ab" disclosure-url="server.php?text=TC preloaded2" class="pm-preloaded-tc">TC Precargada2</option>
+            <option value="3" id="temp4ac" disclosure-url="server.php?text=TC preloaded3" class="pm-preloaded-tc">TC Precargada3</option>
+            <option value="4" id="temp4ad" disclosure-url="server.php?text=TC nueva1" class="pm-new-tc">TC nueva1</option>
+            <option value="5" id="temp4ae" disclosure-url="server.php?text=TC nueva2" class="pm-new-tc">TC nueva2</option>
+            <option value="6" id="temp4af" disclosure-url="server.php?text=TC nueva3" class="pm-new-tc">TC nueva3</option>
+            <option value="7" id="temp4ag" disclosure-url="server.php?text=Otros medios1" class="pm-other">Otros medios1</option>
+            <option value="8" id="temp4ah" disclosure-url="server.php?text=Otros medios2" class="pm-other">Otros medios2</option>
+            <option value="9" id="temp4ai" disclosure-url="server.php?text=Otros medios3" class="pm-other">Otros medios3</option>
+        </select>
+        <h6>Some content here, in the middle</h6>
+        <div id="case4container">
+            TC Precargada1
+        </div>
+        <div data-js="dni" disclosure-hidden="true">
+            DNI
+        </div>
+    </fieldset>
 
-        <script>
-            // VOLAR CAMION
-            $('[data-js="kakakaka"]').one('aftershow.disclosure', function () {
-                var camion = document.querySelector('[data-js="camionnn"]');
-                camion.parentNode.removeChild(camion);
+    <fieldset>
+        <legend>Payments 2</legend>
+        <select data-js="payment-method2" name="case4b" disclosure disclosure-container="case4bcontainer">
+            <option>algo</option>
+            <optgroup label="pepe">
+                <option value="1" id="temp4ba" disclosure-url="server.php?text=FORM TC preloaded1" class="pm-preloaded-tc">TC Precargada1</option>
+                <option value="2" id="temp4bb" disclosure-url="server.php?text=FORM TC preloaded2" class="pm-preloaded-tc">TC Precargada2</option>
+                <option value="3" id="temp4bc" disclosure-url="server.php?text=FORM TC preloaded3" class="pm-preloaded-tc">TC Precargada3</option>
+            </optgroup>
+            <option value="4" id="temp4bd" disclosure-url="server.php?text=dsafd1s" class="pm-new-tc">TC nueva1</option>
+            <option value="5" id="temp4be" disclosure-url="server.php?text=dsafds2" class="pm-new-tc">TC nueva2</option>
+            <option value="6" id="temp4bf" disclosure-url="server.php?text=dsafdsdas3" class="pm-new-tc">TC nueva3</option>
+            <option value="7" id="temp4bg" disclosure-url="server.php?text=FORM Otros medios1" class="pm-other">Otros medios1</option>
+            <option value="8" id="temp4bh" disclosure-url="server.php?text=FORM Otros medios2" class="pm-other">Otros medios2</option>
+            <option value="9" id="temp4bi" disclosure-url="server.php?text=FORM Otros medios3" class="pm-other">Otros medios3</option>
+        </select>
+        <h6>Some content here, in the middle</h6>
+        <div id="case4bcontainer">
+            TC Precargada1
+        </div>
+    </fieldset>
+
+    <div>
+        <h4>CEP</h4>
+        <div data-js="cep">
+            <div data-js="mierda">
+                <button data-js="cep-submit" data-action="server.php?cep=123">Send</button>
+            </div>
+        </div>
+        <!-- <div disclosure disclosure-event="click">
+
+            <div id="case5container1">
+                <form action="nomatter.php">
+                    <input type="submit" disclosure-container="case5container1" disclosure-url="server.php?cep=123" value="Send"/>
+                </form>
+            </div>
+        </div> -->
+    </div>
+
+    <script src="http://static.mlstatic.com/org-img/ch/vendor/jquery/jquery-1.10.2.min.js"></script>
+    <script src="disclosure.js"></script>
+    <script src="libs/jasmine-2.0.0/jasmine.js"></script>
+    <script src="libs/jasmine-2.0.0/jasmine-html.js"></script>
+    <script src="libs/jasmine-2.0.0/boot.js"></script>
+    <script src="tests.js"></script>
+
+    <!--script>var bind=window.addEventListener?'addEventListener':'attachEvent',prefix=(bind === 'attachEvent')?'on':'';</script>
+
+
+    <script>document.getElementById('addcostsata')[bind](prefix + 'click', function () {alert("valid add cost")})</script>
+
+    <script>
+        var documentInput = document.querySelector('[data-js="dni"]'),
+            payMet = document.querySelector('[data-js="payment-method"]');
+
+        $(payMet).on('beforeshow.disclosure', function () {
+            documentInput.setAttribute('disclosure-hidden', this.options[this.selectedIndex].className === 'pm-new-tc');
+        });
+
+        if (payMet.options[payMet.selectedIndex].className !== 'pm-new-tc') {
+            documentInput.setAttribute('disclosure-hidden', 'false');
+        }
+    </script>
+
+    <script>
+        // DESABILITAR SUBMIT mientras carga disclosures
+        $('[data-js="paradesabilitar"]')
+            .on('beforeshow.disclosure', function () {
+                this.style.backgroundColor = 'red';
+            })
+            .on('aftershow.disclosure', function () {
+                this.style.backgroundColor = 'green';
             });
-        </script>
+    </script>
 
-        <script>
+    <script>
+        // VOLAR CAMION
+        $('[data-js="kakakaka"]').one('aftershow.disclosure', function () {
+            var camion = document.querySelector('[data-js="camionnn"]');
+            camion.parentNode.removeChild(camion);
+        });
+    </script>
+
+    <script>
 (function (cho, doc) {
-    'use strict';
+'use strict';
 
-    var cep = doc.querySelector('[data-js="cep"]');
+var cep = doc.querySelector('[data-js="cep"]');
 
-    // cho.mierda = document.querySelector('[data-js="mierda"]'),
-    window.mierda = doc.querySelector('[data-js="mierda"]'),
+// cho.mierda = document.querySelector('[data-js="mierda"]'),
+window.mierda = doc.querySelector('[data-js="mierda"]'),
 
-    // cho.bind(doc.querySelector('[data-js="cep-submit"]'), 'click', function (event) {
-    doc.querySelector('[data-js="cep-submit"]').addEventListener('click', function (event) {
-        event.preventDefault();
+// cho.bind(doc.querySelector('[data-js="cep-submit"]'), 'click', function (event) {
+doc.querySelector('[data-js="cep-submit"]')[bind](prefix + 'click', function (event) {
+    event.preventDefault();
 
-        $.ajax({
-            'url': this.getAttribute('data-action'),
-            'dataType': 'json',
-            'success': function (data) {
-                // Hide the Zip Code input
-                mierda.setAttribute('aria-hidden', 'true');
-                // Insert the response (the entire form)
-                cep.insertAdjacentHTML('beforeend', data.HTML);
-                // Insert scripts
-                var script = document.createElement('script');
-                script.innerHTML = data.JS;
-                document.querySelector('head').appendChild(script);
-            }
-        })
+    $.ajax({
+        'url': this.getAttribute('data-action'),
+        'dataType': 'json',
+        'success': function (data) {
+            // Hide the Zip Code input
+            mierda.setAttribute('disclosure-hidden', 'true');
+            // Insert the response (the entire form)
+            cep.insertAdjacentHTML('beforeend', data.HTML);
+            // Insert scripts
+            var script = document.createElement('script');
+            script.innerHTML = data.JS;
+            document.querySelector('head').appendChild(script);
+        }
     });
+});
 
 }(this.cho, this.document));
-        </script>
-    </body>
+    </script-->
+</body>
 </html>
 
 
